@@ -1,6 +1,6 @@
 import Foundation
 
-enum RecordFormat: String, Codable {
+enum RecordFormat: String, Codable, CaseIterable {
     case lp = "LP"
     case ep = "EP"
     case single = "Single"

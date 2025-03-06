@@ -12,67 +12,45 @@ struct SearchView: View {
     @State private var successMessage = ""
     @State private var isAddingRecord = false
     @State private var hapticGenerator = UINotificationFeedbackGenerator()
+    @State private var viewMode: ViewMode = .grid
     
     let discogsService: DiscogsServiceWrapper
     
     var body: some View {
         NavigationView {
-            List {
-                if isSearching {
-                    ProgressView("Searching...")
-                        .frame(maxWidth: .infinity, alignment: .center)
-                } else if searchResults.isEmpty && !searchText.isEmpty {
-                    Text("No results found")
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                } else {
-                    ForEach(searchResults) { record in
-                        NavigationLink {
-                            RecordDetailView(record: record)
-                        } label: {
-                            RecordRowView(record: record)
-                        }
-                        .swipeActions {
-                            Button {
-                                guard !isAddingRecord else { return }
-                                isAddingRecord = true
-                                
-                                Task {
-                                    // Simulate network delay
-                                    try? await Task.sleep(for: .milliseconds(500))
-                                    
-                                    withAnimation {
-                                        recordStore.addRecord(record)
-                                        successMessage = "\(record.title) added to collection"
-                                        showingSuccess = true
-                                        isAddingRecord = false
-                                        
-                                        // Trigger success haptic
-                                        hapticGenerator.notificationOccurred(.success)
-                                        
-                                        // Hide success message after 2 seconds
-                                        Task {
-                                            try? await Task.sleep(for: .seconds(2))
-                                            withAnimation {
-                                                showingSuccess = false
-                                            }
-                                        }
-                                    }
-                                }
-                            } label: {
-                                if isAddingRecord {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Label("Add", systemImage: "plus")
-                                }
+            ZStack {
+                AppColors.background
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // View Mode Selector
+                    viewModeSelector
+                        .padding(.horizontal)
+                        .padding(.top)
+                    
+                    // Search Results
+                    if isSearching {
+                        loadingView
+                    } else if searchResults.isEmpty && !searchText.isEmpty {
+                        emptyResultsView
+                    } else {
+                        // Collection Content
+                        ScrollView {
+                            switch viewMode {
+                            case .grid:
+                                gridView
+                            case .list:
+                                listView
+                            case .compact:
+                                compactView
                             }
-                            .tint(.green)
                         }
+                        .padding(.top, 8)
                     }
                 }
             }
-            .navigationTitle("Search")
+            .navigationTitle("Search Discogs")
+            .navigationBarTitleDisplayMode(.large)
             .searchable(text: $searchText, prompt: "Search for vinyl records")
             .keyboardShortcut("f", modifiers: .command) // Command+F to focus search
             .onChange(of: searchText) { newValue in
@@ -104,11 +82,12 @@ struct SearchView: View {
                     VStack {
                         Spacer()
                         Text(successMessage)
-                            .foregroundColor(.white)
+                            .font(AppFonts.bodyLarge)
+                            .foregroundColor(AppColors.textLight)
                             .padding()
-                            .background(Color.green.opacity(0.8))
-                            .cornerRadius(10)
-                            .shadow(radius: 5)
+                            .background(AppColors.accent1)
+                            .cornerRadius(AppShapes.cornerRadiusMedium)
+                            .shadow(color: AppColors.accent1.opacity(0.3), radius: 10, x: 0, y: 5)
                             .padding(.horizontal)
                             .padding(.bottom, 30)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -132,6 +111,175 @@ struct SearchView: View {
                 
                 // Prepare haptic feedback generator
                 hapticGenerator.prepare()
+            }
+        }
+    }
+    
+    // MARK: - View Components
+    
+    private var viewModeSelector: some View {
+        HStack {
+            ForEach(ViewMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.spring()) {
+                        viewMode = mode
+                    }
+                } label: {
+                    Text(mode.rawValue)
+                        .font(AppFonts.bodyMedium.weight(viewMode == mode ? .bold : .regular))
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(
+                            viewMode == mode ?
+                            AppColors.secondary :
+                            AppColors.background
+                        )
+                        .foregroundColor(
+                            viewMode == mode ?
+                            AppColors.textLight :
+                            AppColors.textSecondary
+                        )
+                        .cornerRadius(AppShapes.cornerRadiusMedium)
+                }
+            }
+            
+            Spacer()
+        }
+    }
+    
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            
+            ProgressView()
+                .scaleEffect(1.5)
+                .tint(AppColors.secondary)
+            
+            Text("Searching Discogs...")
+                .font(AppFonts.bodyLarge)
+                .foregroundColor(AppColors.textSecondary)
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var emptyResultsView: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 60))
+                .foregroundColor(AppColors.textSecondary.opacity(0.5))
+            
+            Text("No results found")
+                .font(AppFonts.titleMedium)
+                .foregroundColor(AppColors.textSecondary)
+            
+            Text("Try a different search term")
+                .font(AppFonts.bodyLarge)
+                .foregroundColor(AppColors.textSecondary.opacity(0.7))
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var gridView: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 180), spacing: 16)], spacing: 16) {
+            ForEach(searchResults) { record in
+                NavigationLink(destination: RecordDetailView(record: record)) {
+                    RecordCardMedium(record: record)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .contextMenu {
+                    addToCollectionButton(record: record)
+                }
+            }
+        }
+        .padding()
+        .animation(.spring(), value: searchResults)
+    }
+    
+    private var listView: some View {
+        LazyVStack(spacing: 16) {
+            ForEach(searchResults) { record in
+                NavigationLink(destination: RecordDetailView(record: record)) {
+                    RecordCardLarge(record: record)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .contextMenu {
+                    addToCollectionButton(record: record)
+                }
+            }
+        }
+        .padding()
+        .animation(.spring(), value: searchResults)
+    }
+    
+    private var compactView: some View {
+        LazyVStack(spacing: 12) {
+            ForEach(searchResults) { record in
+                NavigationLink(destination: RecordDetailView(record: record)) {
+                    RecordCardRow(record: record)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .contextMenu {
+                    addToCollectionButton(record: record)
+                }
+                .swipeActions {
+                    Button {
+                        addToCollection(record)
+                    } label: {
+                        if isAddingRecord {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Label("Add", systemImage: "plus")
+                        }
+                    }
+                    .tint(AppColors.accent1)
+                }
+            }
+        }
+        .padding()
+        .animation(.spring(), value: searchResults)
+    }
+    
+    private func addToCollectionButton(record: Record) -> some View {
+        Button {
+            addToCollection(record)
+        } label: {
+            Label("Add to Collection", systemImage: "plus.circle")
+        }
+    }
+    
+    // MARK: - Actions
+    
+    private func addToCollection(_ record: Record) {
+        guard !isAddingRecord else { return }
+        isAddingRecord = true
+        
+        Task {
+            // Simulate network delay
+            try? await Task.sleep(for: .milliseconds(500))
+            
+            withAnimation {
+                recordStore.addRecord(record)
+                successMessage = "\(record.title) added to collection"
+                showingSuccess = true
+                isAddingRecord = false
+                
+                // Trigger success haptic
+                hapticGenerator.notificationOccurred(.success)
+                
+                // Hide success message after 2 seconds
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    withAnimation {
+                        showingSuccess = false
+                    }
+                }
             }
         }
     }

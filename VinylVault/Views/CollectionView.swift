@@ -1,172 +1,365 @@
 import SwiftUI
 
+enum ViewMode: String, CaseIterable {
+    case grid = "Grid"
+    case list = "List"
+    case compact = "Compact"
+}
+
 struct CollectionView: View {
     @EnvironmentObject var recordStore: RecordStore
-    @State private var sortOption = SortOption.artist
-    @State private var filterTag: String?
-    @State private var showingStats = false
+    @State private var viewMode: ViewMode = .grid
     @State private var searchText = ""
+    @State private var showingAddRecord = false
+    @State private var showingFilters = false
+    @State private var selectedArtistFilter: String?
+    @State private var selectedYearFilter: Int?
+    @State private var selectedFormatFilter: RecordFormat?
     
-    enum SortOption: String, CaseIterable {
-        case artist = "Artist"
-        case recent = "Recently Added"
-        case plays = "Most Played"
-        case year = "Year"
-    }
-    
-    var filteredRecords: [Record] {
+    private var filteredRecords: [Record] {
         var records = recordStore.records
         
         // Apply search filter
         if !searchText.isEmpty {
             records = records.filter { record in
                 record.title.localizedCaseInsensitiveContains(searchText) ||
-                record.artist.localizedCaseInsensitiveContains(searchText) ||
-                record.tags.contains { $0.localizedCaseInsensitiveContains(searchText) }
+                record.artist.localizedCaseInsensitiveContains(searchText)
             }
         }
         
-        // Apply tag filter
-        if let tag = filterTag {
-            records = records.filter { $0.tags.contains(tag.lowercased()) }
+        // Apply artist filter
+        if let artist = selectedArtistFilter {
+            records = records.filter { $0.artist == artist }
         }
         
-        // Apply sort
-        switch sortOption {
-        case .artist:
-            return records.sortedByArtist()
-        case .recent:
-            return records.sortedByCreatedAt()
-        case .plays:
-            return records.sortedByPlays()
-        case .year:
-            return records.sorted { ($0.year ?? 0) > ($1.year ?? 0) }
+        // Apply year filter
+        if let year = selectedYearFilter {
+            records = records.filter { $0.year == year }
         }
+        
+        // Apply format filter
+        if let format = selectedFormatFilter {
+            records = records.filter { $0.format == format }
+        }
+        
+        return records
     }
     
-    var allTags: [String] {
-        Array(Set(recordStore.records.flatMap(\.tags))).sorted()
+    private var artists: [String] {
+        Array(Set(recordStore.records.map { $0.artist })).sorted()
+    }
+    
+    private var years: [Int] {
+        Array(Set(recordStore.records.compactMap { $0.year })).sorted()
     }
     
     var body: some View {
         NavigationView {
-            List {
-                if recordStore.records.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "music.note.list")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-                        Text("No Records")
-                            .font(.title2)
-                            .foregroundColor(.primary)
-                        Text("Add records by searching the Discogs database")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .listRowBackground(Color.clear)
-                } else {
-                    ForEach(filteredRecords) { record in
-                        NavigationLink {
-                            RecordDetailView(record: record)
-                        } label: {
-                            RecordRowView(record: record)
+            ZStack {
+                AppColors.background
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // View Mode Selector
+                    viewModeSelector
+                        .padding(.horizontal)
+                        .padding(.top)
+                    
+                    // Filter Chips
+                    filterChips
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                    
+                    // Collection Content
+                    ScrollView {
+                        switch viewMode {
+                        case .grid:
+                            gridView
+                        case .list:
+                            listView
+                        case .compact:
+                            compactView
                         }
+                    }
+                    .padding(.top, 8)
+                }
+            }
+            .navigationTitle("My Collection")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingFilters = true
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .foregroundColor(AppColors.primary)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingAddRecord = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(AppColors.primary)
                     }
                 }
             }
-            .navigationTitle("Collection")
             .searchable(text: $searchText, prompt: "Search your collection")
-            .navigationBarItems(trailing:
-                Menu {
-                    Picker("Sort by", selection: $sortOption) {
-                        ForEach(SortOption.allCases, id: \.self) { option in
-                            Text(option.rawValue)
+            .sheet(isPresented: $showingAddRecord) {
+                Text("Add Record View")
+                    .presentationDetents([.medium, .large])
+            }
+            .sheet(isPresented: $showingFilters) {
+                filterSheet
+                    .presentationDetents([.medium])
+            }
+        }
+    }
+    
+    // MARK: - View Components
+    
+    private var viewModeSelector: some View {
+        HStack {
+            ForEach(ViewMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.spring()) {
+                        viewMode = mode
+                    }
+                } label: {
+                    Text(mode.rawValue)
+                        .font(AppFonts.bodyMedium.weight(viewMode == mode ? .bold : .regular))
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(
+                            viewMode == mode ?
+                            AppColors.primary :
+                            AppColors.background
+                        )
+                        .foregroundColor(
+                            viewMode == mode ?
+                            AppColors.textLight :
+                            AppColors.textSecondary
+                        )
+                        .cornerRadius(AppShapes.cornerRadiusMedium)
+                }
+            }
+            
+            Spacer()
+        }
+    }
+    
+    private var filterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                if selectedArtistFilter != nil || selectedYearFilter != nil || selectedFormatFilter != nil {
+                    Button {
+                        withAnimation {
+                            selectedArtistFilter = nil
+                            selectedYearFilter = nil
+                            selectedFormatFilter = nil
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Clear All")
+                                .font(AppFonts.bodySmall)
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10))
+                        }
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .background(AppColors.accent2.opacity(0.1))
+                        .foregroundColor(AppColors.accent2)
+                        .cornerRadius(AppShapes.cornerRadiusSmall)
+                    }
+                }
+                
+                if let artist = selectedArtistFilter {
+                    filterChip(text: artist, color: AppColors.accent1) {
+                        withAnimation {
+                            selectedArtistFilter = nil
                         }
                     }
-                    
-                    Divider()
-                    
-                    Menu("Filter by Tag") {
-                        Button("All Records") {
-                            filterTag = nil
+                }
+                
+                if let year = selectedYearFilter {
+                    filterChip(text: "\(year)", color: AppColors.accent3) {
+                        withAnimation {
+                            selectedYearFilter = nil
                         }
-                        
-                        Divider()
-                        
-                        ForEach(allTags, id: \.self) { tag in
-                            Button {
-                                filterTag = tag
-                            } label: {
-                                if filterTag == tag {
-                                    Label(tag, systemImage: "checkmark")
-                                } else {
-                                    Text(tag)
+                    }
+                }
+                
+                if let format = selectedFormatFilter {
+                    filterChip(text: format.rawValue, color: AppColors.tertiary) {
+                        withAnimation {
+                            selectedFormatFilter = nil
+                        }
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding(.vertical, 4)
+        }
+    }
+    
+    private func filterChip(text: String, color: Color, onRemove: @escaping () -> Void) -> some View {
+        HStack(spacing: 4) {
+            Text(text)
+                .font(AppFonts.bodySmall)
+            
+            Button {
+                onRemove()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10))
+            }
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(color.opacity(0.1))
+        .foregroundColor(color)
+        .cornerRadius(AppShapes.cornerRadiusSmall)
+    }
+    
+    private var gridView: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 180), spacing: 16)], spacing: 16) {
+            ForEach(filteredRecords) { record in
+                NavigationLink(destination: RecordDetailView(record: record)) {
+                    RecordCardMedium(record: record)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding()
+        .animation(.spring(), value: filteredRecords)
+    }
+    
+    private var listView: some View {
+        LazyVStack(spacing: 16) {
+            ForEach(filteredRecords) { record in
+                NavigationLink(destination: RecordDetailView(record: record)) {
+                    RecordCardLarge(record: record)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding()
+        .animation(.spring(), value: filteredRecords)
+    }
+    
+    private var compactView: some View {
+        LazyVStack(spacing: 12) {
+            ForEach(filteredRecords) { record in
+                NavigationLink(destination: RecordDetailView(record: record)) {
+                    RecordCardRow(record: record)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding()
+        .animation(.spring(), value: filteredRecords)
+    }
+    
+    private var filterSheet: some View {
+        NavigationView {
+            List {
+                Section("Artist") {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(artists, id: \.self) { artist in
+                                Button {
+                                    selectedArtistFilter = artist
+                                    showingFilters = false
+                                } label: {
+                                    Text(artist)
+                                        .font(AppFonts.bodyMedium)
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 12)
+                                        .background(
+                                            selectedArtistFilter == artist ?
+                                            AppColors.accent1 :
+                                            AppColors.accent1.opacity(0.1)
+                                        )
+                                        .foregroundColor(
+                                            selectedArtistFilter == artist ?
+                                            AppColors.textLight :
+                                            AppColors.accent1
+                                        )
+                                        .cornerRadius(AppShapes.cornerRadiusSmall)
                                 }
                             }
                         }
-                    }
-                    
-                    Divider()
-                    
-                    Button {
-                        showingStats = true
-                    } label: {
-                        Label("Collection Stats", systemImage: "chart.bar")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            )
-            .sheet(isPresented: $showingStats) {
-                StatsView(stats: recordStore.collectionStats)
-            }
-        }
-    }
-}
-
-struct StatsView: View {
-    let stats: CollectionStats
-    @Environment(\.dismiss) var dismiss
-    
-    var body: some View {
-        NavigationView {
-            List {
-                Section("Overview") {
-                    StatRow(title: "Total Records", value: "\(stats.totalRecords)")
-                    StatRow(title: "Total Plays", value: "\(stats.totalPlays)")
-                    StatRow(title: "Average Plays", value: String(format: "%.1f", stats.averagePlays))
-                    StatRow(title: "Collection Value", value: stats.formattedTotalValue)
-                }
-                
-                Section("Top Artists") {
-                    ForEach(stats.topArtists, id: \.artist) { artist, count in
-                        HStack {
-                            Text(artist)
-                            Spacer()
-                            Text("\(count)")
-                                .foregroundColor(.secondary)
-                        }
+                        .padding(.vertical, 4)
                     }
                 }
                 
-                Section("Records by Decade") {
-                    ForEach(stats.yearDistribution.sorted(by: { $0.key > $1.key }), id: \.key) { decade, count in
-                        HStack {
-                            Text("\(decade)s")
-                            Spacer()
-                            Text("\(count)")
-                                .foregroundColor(.secondary)
+                Section("Year") {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(years, id: \.self) { year in
+                                Button {
+                                    selectedYearFilter = year
+                                    showingFilters = false
+                                } label: {
+                                    Text("\(year)")
+                                        .font(AppFonts.bodyMedium)
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 12)
+                                        .background(
+                                            selectedYearFilter == year ?
+                                            AppColors.accent3 :
+                                            AppColors.accent3.opacity(0.1)
+                                        )
+                                        .foregroundColor(
+                                            selectedYearFilter == year ?
+                                            AppColors.textLight :
+                                            AppColors.accent3
+                                        )
+                                        .cornerRadius(AppShapes.cornerRadiusSmall)
+                                }
+                            }
                         }
+                        .padding(.vertical, 4)
                     }
                 }
+                
+                Section("Format") {
+                    HStack(spacing: 8) {
+                        ForEach(RecordFormat.allCases, id: \.self) { format in
+                            Button {
+                                selectedFormatFilter = format
+                                showingFilters = false
+                            } label: {
+                                Text(format.rawValue)
+                                    .font(AppFonts.bodyMedium)
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 12)
+                                    .background(
+                                        selectedFormatFilter == format ?
+                                        AppColors.tertiary :
+                                        AppColors.tertiary.opacity(0.1)
+                                    )
+                                    .foregroundColor(
+                                        selectedFormatFilter == format ?
+                                        AppColors.textLight :
+                                        AppColors.tertiary
+                                    )
+                                    .cornerRadius(AppShapes.cornerRadiusSmall)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
             }
-            .navigationTitle("Collection Stats")
+            .navigationTitle("Filter Records")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        dismiss()
+                        showingFilters = false
                     }
                 }
             }
@@ -174,20 +367,7 @@ struct StatsView: View {
     }
 }
 
-struct StatRow: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(title)
-            Spacer()
-            Text(value)
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
+// MARK: - Preview
 struct CollectionView_Previews: PreviewProvider {
     static var previews: some View {
         CollectionView()

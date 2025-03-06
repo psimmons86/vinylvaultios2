@@ -2,266 +2,321 @@ import SwiftUI
 
 struct RecordDetailView: View {
     @EnvironmentObject var recordStore: RecordStore
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.presentationMode) var presentationMode
     
-    @State private var record: Record
+    let record: Record
     @State private var isEditing = false
     @State private var showingDeleteConfirmation = false
-    @State private var newTag = ""
-    
-    init(record: Record) {
-        _record = State(initialValue: record)
-    }
+    @State private var animateHeart = false
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Album Art
-                AsyncImage(url: URL(string: record.imageUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                } placeholder: {
-                    Image(systemName: "music.note")
-                        .font(.system(size: 60))
-                        .foregroundColor(.gray)
-                }
-                .frame(height: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .shadow(radius: 5)
+            VStack(spacing: 0) {
+                // Album Cover
+                albumCoverSection
                 
-                // Title and Artist
-                VStack(spacing: 8) {
-                    if isEditing {
-                        TextField("Title", text: $record.title)
-                            .font(.title)
-                            .multilineTextAlignment(.center)
-                        
-                        TextField("Artist", text: $record.artist)
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    } else {
-                        Text(record.title)
-                            .font(.title)
-                            .multilineTextAlignment(.center)
-                        
-                        Text(record.artist)
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-                    }
+                // Record Info
+                recordInfoSection
+                
+                // Stats Section
+                statsSection
+                
+                // Notes Section
+                if let notes = record.notes, !notes.isEmpty {
+                    notesSection(notes: notes)
                 }
                 
-                // Details
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Label("\(record.format.rawValue)", systemImage: "record.circle")
-                        Spacer()
-                        if let year = record.year {
-                            Label("\(year)", systemImage: "calendar")
-                        }
-                    }
-                    
-                    if record.plays > 0 {
-                        HStack {
-                            Label("\(record.plays) plays", systemImage: "play.circle")
-                            Spacer()
-                            Text(record.timeSinceLastPlayed)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    if isEditing {
-                        Toggle("In Heavy Rotation", isOn: $record.inHeavyRotation)
-                    } else if record.inHeavyRotation {
-                        Label("In Heavy Rotation", systemImage: "flame.fill")
-                            .foregroundColor(.orange)
-                    }
-                }
-                .padding()
-                .background(Color(.systemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .shadow(radius: 2)
-                
-                // Tags
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Tags")
-                        .font(.headline)
-                    
-                    if isEditing {
-                        HStack {
-                            TextField("Add tag", text: $newTag)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            
-                            Button(action: {
-                                if !newTag.isEmpty {
-                                    record.addTag(newTag)
-                                    newTag = ""
-                                }
-                            }) {
-                                Image(systemName: "plus.circle.fill")
-                            }
-                        }
-                    }
-                    
-                    FlowLayout(
-                        spacing: 8,
-                        items: record.tags,
-                        isEditing: isEditing,
-                        onDelete: { tag in
-                            record.removeTag(tag)
-                        }
-                    )
-                }
-                .padding()
-                .background(Color(.systemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .shadow(radius: 2)
-                
-                // Notes
-                if isEditing || record.notes != nil {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Notes")
-                            .font(.headline)
-                        
-                        if isEditing {
-                            TextEditor(text: Binding(
-                                get: { record.notes ?? "" },
-                                set: { record.notes = $0.isEmpty ? nil : $0 }
-                            ))
-                            .frame(height: 100)
-                            .padding(4)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
-                        } else if let notes = record.notes {
-                            Text(notes)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(radius: 2)
-                }
+                // Action Buttons
+                actionButtonsSection
             }
-            .padding()
         }
+        .background(AppColors.background.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(isEditing ? "Done" : "Edit") {
-                    if isEditing {
-                        recordStore.updateRecord(record)
-                    }
-                    isEditing.toggle()
-                }
-            }
-            
-            if isEditing {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Delete", role: .destructive) {
-                        showingDeleteConfirmation = true
-                    }
-                }
-            } else {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
                     Button {
-                        recordStore.incrementPlays(for: record)
+                        isEditing = true
                     } label: {
-                        Image(systemName: "play.circle")
+                        Label("Edit", systemImage: "pencil")
                     }
+                    
+                    Button(role: .destructive) {
+                        showingDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundColor(AppColors.primary)
                 }
             }
         }
         .alert("Delete Record", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
                 recordStore.deleteRecord(record)
-                dismiss()
+                presentationMode.wrappedValue.dismiss()
             }
-            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Are you sure you want to delete this record? This action cannot be undone.")
+            Text("Are you sure you want to delete '\(record.title)' by \(record.artist)? This action cannot be undone.")
+        }
+        .sheet(isPresented: $isEditing) {
+            Text("Edit Record View")
+                .presentationDetents([.large])
         }
     }
-}
-
-struct FlowLayout: View {
-    let spacing: CGFloat
-    let items: [String]
-    let isEditing: Bool
-    let onDelete: (String) -> Void
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: spacing) {
-            var width = CGFloat.zero
-            var height = CGFloat.zero
-            var lastHeight = CGFloat.zero
+    // MARK: - View Components
+    
+    private var albumCoverSection: some View {
+        ZStack(alignment: .bottom) {
+            // Album Cover
+            AsyncImage(url: URL(string: record.imageUrl)) { phase in
+                switch phase {
+                case .empty:
+                    Rectangle()
+                        .fill(AppColors.secondary.opacity(0.1))
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .font(.system(size: 60))
+                                .foregroundColor(AppColors.secondary)
+                        )
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure:
+                    Rectangle()
+                        .fill(AppColors.secondary.opacity(0.1))
+                        .overlay(
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 60))
+                                .foregroundColor(AppColors.secondary)
+                        )
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            .frame(height: 350)
+            .clipped()
             
-            GeometryReader { geometry in
-                ZStack(alignment: .topLeading) {
-                    ForEach(items, id: \.self) { item in
-                        HStack {
-                            Text(item)
-                            if isEditing {
-                                Button {
-                                    onDelete(item)
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.red)
-                                }
+            // Gradient overlay
+            LinearGradient(
+                gradient: Gradient(colors: [Color.black.opacity(0.7), Color.black.opacity(0)]),
+                startPoint: .bottom,
+                endPoint: .top
+            )
+            .frame(height: 150)
+            
+            // Title and artist
+            VStack(alignment: .leading, spacing: 4) {
+                Text(record.title)
+                    .font(AppFonts.titleLarge)
+                    .foregroundColor(.white)
+                    .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
+                
+                Text(record.artist)
+                    .font(AppFonts.titleSmall)
+                    .foregroundColor(.white.opacity(0.9))
+                    .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
+                
+                HStack {
+                    if let year = record.year {
+                        Text("\(year)")
+                            .font(AppFonts.bodyMedium)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                    
+                    FormatBadge(format: record.format)
+                        .padding(.leading, 4)
+                }
+                .padding(.top, 4)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+        }
+    }
+    
+    private var recordInfoSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if let label = record.label, !label.isEmpty {
+                infoRow(title: "Label", value: label)
+            }
+            
+            if !record.tags.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Tags")
+                        .font(AppFonts.bodyMedium)
+                        .foregroundColor(AppColors.textSecondary)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(record.tags, id: \.self) { tag in
+                                Text(tag)
+                                    .font(AppFonts.bodySmall)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(AppColors.secondary.opacity(0.1))
+                                    .foregroundColor(AppColors.secondary)
+                                    .cornerRadius(AppShapes.cornerRadiusSmall)
                             }
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.1))
-                        .clipShape(Capsule())
-                        .alignmentGuide(.leading) { dimension in
-                            if abs(width - dimension.width) > geometry.size.width {
-                                width = 0
-                                height -= lastHeight
-                            }
-                            lastHeight = dimension.height
-                            let result = width
-                            if item == items.last {
-                                width = 0
-                            } else {
-                                width -= dimension.width + spacing
-                            }
-                            return result
-                        }
-                        .alignmentGuide(.top) { dimension in
-                            let result = height
-                            if item == items.last {
-                                height = 0
-                            }
-                            return result
                         }
                     }
                 }
             }
+            
+            if let discogsId = record.discogsId {
+                infoRow(title: "Discogs ID", value: discogsId)
+            }
         }
+        .padding(20)
+        .background(AppColors.cardBackground)
+    }
+    
+    private func infoRow(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(AppFonts.bodyMedium)
+                .foregroundColor(AppColors.textSecondary)
+            
+            Text(value)
+                .font(AppFonts.bodyLarge)
+                .foregroundColor(AppColors.textPrimary)
+        }
+    }
+    
+    private var statsSection: some View {
+        HStack(spacing: 0) {
+            statItem(
+                value: "\(record.plays)",
+                label: "Plays",
+                icon: "play.circle.fill",
+                color: AppColors.accent1
+            )
+            
+            Divider()
+                .frame(height: 40)
+                .padding(.vertical, 10)
+            
+            statItem(
+                value: record.formattedLastPlayed,
+                label: "Last Played",
+                icon: "calendar",
+                color: AppColors.accent3
+            )
+            
+            Divider()
+                .frame(height: 40)
+                .padding(.vertical, 10)
+            
+            statItem(
+                value: "$\(String(format: "%.2f", record.value))",
+                label: "Value",
+                icon: "dollarsign.circle.fill",
+                color: AppColors.tertiary
+            )
+        }
+        .padding(.vertical, 16)
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppShapes.cornerRadiusMedium)
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+    }
+    
+    private func statItem(value: String, label: String, icon: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                
+                Text(value)
+                    .font(AppFonts.bodyLarge.weight(.semibold))
+                    .foregroundColor(AppColors.textPrimary)
+            }
+            
+            Text(label)
+                .font(AppFonts.bodySmall)
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
+    private func notesSection(notes: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Notes")
+                .font(AppFonts.titleSmall)
+                .foregroundColor(AppColors.textPrimary)
+            
+            Text(notes)
+                .font(AppFonts.bodyMedium)
+                .foregroundColor(AppColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppShapes.cornerRadiusMedium)
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+    }
+    
+    private var actionButtonsSection: some View {
+        VStack(spacing: 12) {
+            PrimaryButton(title: "Mark as Played", icon: "play.fill") {
+                var updatedRecord = record
+                updatedRecord.incrementPlays()
+                recordStore.updateRecord(updatedRecord)
+                
+                // Animate heart
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    animateHeart = true
+                }
+                
+                // Reset animation
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    animateHeart = false
+                }
+            }
+            
+            SecondaryButton(title: "Add to Playlist", icon: "music.note.list") {
+                // Add to playlist functionality
+            }
+        }
+        .padding(20)
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppShapes.cornerRadiusLarge)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 20)
+        .overlay(
+            Image(systemName: "heart.fill")
+                .font(.system(size: 60))
+                .foregroundColor(AppColors.primary.opacity(0.8))
+                .scaleEffect(animateHeart ? 1.5 : 0.1)
+                .opacity(animateHeart ? 1 : 0)
+                .position(x: UIScreen.main.bounds.width / 2, y: 20)
+        )
     }
 }
 
-#if DEBUG
+// MARK: - Preview
 struct RecordDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        let store = RecordStore()
-        let record = Record(
-            title: "Dark Side of the Moon",
-            artist: "Pink Floyd",
-            year: 1973,
-            format: .lp,
-            tags: ["Progressive Rock", "Psychedelic"],
-            plays: 42,
-            imageUrl: "default-album",
-            notes: "One of the greatest albums ever made.",
-            inHeavyRotation: true
-        )
         NavigationView {
-            RecordDetailView(record: record)
-                .environmentObject(store)
+            RecordDetailView(record: Record(
+                title: "Nevermind",
+                artist: "Nirvana",
+                year: 1991,
+                format: .lp,
+                tags: ["Grunge", "Rock", "Alternative"],
+                plays: 42,
+                lastPlayed: Date(),
+                imageUrl: "https://example.com/image.jpg",
+                notes: "One of the most influential albums of the 90s.",
+                value: 29.99,
+                label: "DGC Records"
+            ))
+            .environmentObject(RecordStore())
         }
     }
 }
-#endif
