@@ -1,0 +1,14 @@
+{
+  "name": "mongodb-to-firebase-migration",
+  "version": "1.0.0",
+  "description": "Script to migrate data from MongoDB to Firebase Firestore",
+  "main": "mongodb-to-firebase.js",
+  "scripts": {
+    "migrate": "node mongodb-to-firebase.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.10.1",
+    "mongodb": "^5.7.0",
+    "node-fetch": "^3.3.2"
+  }
+}

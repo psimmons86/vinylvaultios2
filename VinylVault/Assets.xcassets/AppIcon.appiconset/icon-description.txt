@@ -1,0 +1,24 @@
+# VinylVault App Icon Design
+
+## Color Scheme
+- Background: Gradient from purple (#6A11CB) to blue (#2575FC)
+- Vinyl Record: Black with subtle grooves
+- Record Label: Vibrant red (#FF5252)
+- Accents: White highlights for reflection
+
+## Design Elements
+1. Rounded square background with a purple-to-blue gradient
+2. Black vinyl record with subtle circular grooves
+3. Bright red record label in the center
+4. Small center hole
+5. Subtle white reflection on the vinyl surface for a glossy look
+
+## Required Sizes (as referenced in Contents.json)
+- app-icon-60@2x.png (120x120 pixels)
+- app-icon-60@3x.png (180x180 pixels)
+- app-icon-76.png (76x76 pixels)
+- app-icon-76@2x.png (152x152 pixels)
+- app-icon-83.5@2x.png (167x167 pixels)
+- app-icon-1024.png (1024x1024 pixels)
+
+This design combines the visual elements of vinyl records with a modern, colorful aesthetic that will stand out on the home screen. The purple-to-blue gradient gives it a contemporary feel while the vinyl record imagery clearly communicates the app's purpose.

@@ -1,0 +1,61 @@
+name: VinylVault
+options:
+  bundleIdPrefix: com.sharespace
+  deploymentTarget:
+    iOS: "16.0"
+
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    exactVersion: 10.29.0
+    products:
+      - FirebaseAnalytics
+      - FirebaseAuth
+      - FirebaseFirestore
+      - FirebaseStorage
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""  # Add your team ID here
+    PRODUCT_BUNDLE_IDENTIFIER: com.sharespace.vinylvault
+
+targets:
+  VinylVault:
+    type: application
+    platform: iOS
+    sources:
+      - path: VinylVault
+    dependencies:
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: Firebase
+        product: FirebaseStorage
+    settings:
+      base:
+        INFOPLIST_FILE: VinylVault/Info.plist
+        PRODUCT_NAME: VinylVault
+        TARGETED_DEVICE_FAMILY: 1,2  # iPhone and iPad
+        OTHER_SWIFT_FLAGS: -D DEBUG
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+        ENABLE_BITCODE: NO
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+        SWIFT_VERSION: 5.0
+    info:
+      path: VinylVault/Info.plist
+      properties:
+        UISupportedInterfaceOrientations: 
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UILaunchStoryboardName: LaunchScreen
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
