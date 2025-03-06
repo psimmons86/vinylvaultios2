@@ -6,7 +6,7 @@ enum RecordFormat: String, Codable, CaseIterable {
     case single = "Single"
 }
 
-struct Record: Identifiable, Codable {
+struct Record: Identifiable, Codable, Equatable {
     let id: UUID
     var title: String
     var artist: String
