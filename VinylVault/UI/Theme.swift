@@ -20,6 +20,11 @@ struct AppColors {
     static let textPrimary = Color(hex: "FF00FF")  // Magenta
     static let textSecondary = Color(hex: "845EC2") // Deep purple
     static let textLight = Color.white             // White for text on teal
+    
+    // Status colors
+    static let success = Color(hex: "4CAF50")      // Green
+    static let warning = Color(hex: "FFC107")      // Amber
+    static let error = Color(hex: "F44336")        // Red
 }
 
 // MARK: - Typography
@@ -32,7 +37,9 @@ struct AppFonts {
     static let bodyMedium = Font.system(size: 14, weight: .regular, design: .rounded)
     static let bodySmall = Font.system(size: 12, weight: .regular, design: .rounded)
     
-    static let caption = Font.system(size: 10, weight: .medium, design: .rounded)
+    static let captionLarge = Font.system(size: 12, weight: .medium, design: .rounded)
+    static let captionMedium = Font.system(size: 10, weight: .medium, design: .rounded)
+    static let captionSmall = Font.system(size: 8, weight: .medium, design: .rounded)
 }
 
 // MARK: - Shapes & Styles

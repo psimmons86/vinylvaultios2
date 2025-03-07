@@ -4,6 +4,9 @@ import Firebase
 @MainActor
 class RecordStore: ObservableObject {
     @Published private(set) var records: [Record] = []
+    @Published private(set) var collaborators: [User] = []
+    @Published private(set) var pendingInvites: [CollaborationInvite] = []
+    @Published private(set) var sentInvites: [CollaborationInvite] = []
     @Published var isLoading = false
     @Published var error: Error?
     
@@ -139,14 +142,145 @@ class RecordStore: ObservableObject {
         }
     }
     
+    // MARK: - User Management
+    
+    func fetchCollaborators() async {
+        guard Auth.auth().currentUser != nil else { return }
+        
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            let result = try await withCheckedThrowingContinuation { continuation in
+                firebaseService.fetchCollaborators { result in
+                    continuation.resume(with: result)
+                }
+            }
+            
+            collaborators = result
+        } catch {
+            self.error = error
+            print("Error fetching collaborators: \(error)")
+        }
+    }
+    
+    func inviteUser(email: String, role: UserRole) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            firebaseService.inviteUser(email: email, role: role) { result in
+                continuation.resume(with: result)
+            }
+        }
+        
+        // Refresh sent invites
+        await fetchSentInvites()
+    }
+    
+    func acceptInvite(inviteId: String) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            firebaseService.acceptInvite(inviteId: inviteId) { result in
+                continuation.resume(with: result)
+            }
+        }
+        
+        // Refresh pending invites
+        await fetchPendingInvites()
+    }
+    
+    func declineInvite(inviteId: String) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            firebaseService.declineInvite(inviteId: inviteId) { result in
+                continuation.resume(with: result)
+            }
+        }
+        
+        // Refresh pending invites
+        await fetchPendingInvites()
+    }
+    
+    func removeCollaborator(userId: String) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            firebaseService.removeCollaborator(userId: userId) { result in
+                continuation.resume(with: result)
+            }
+        }
+        
+        // Refresh collaborators
+        await fetchCollaborators()
+    }
+    
+    func updateCollaboratorRole(userId: String, newRole: UserRole) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            firebaseService.updateCollaboratorRole(userId: userId, newRole: newRole) { result in
+                continuation.resume(with: result)
+            }
+        }
+        
+        // Refresh collaborators
+        await fetchCollaborators()
+    }
+    
+    func fetchPendingInvites() async {
+        guard Auth.auth().currentUser != nil else { return }
+        
+        do {
+            let result = try await withCheckedThrowingContinuation { continuation in
+                firebaseService.fetchPendingInvites { result in
+                    continuation.resume(with: result)
+                }
+            }
+            
+            pendingInvites = result
+        } catch {
+            self.error = error
+            print("Error fetching pending invites: \(error)")
+        }
+    }
+    
+    func fetchSentInvites() async {
+        guard Auth.auth().currentUser != nil else { return }
+        
+        do {
+            let result = try await withCheckedThrowingContinuation { continuation in
+                firebaseService.fetchSentInvites { result in
+                    continuation.resume(with: result)
+                }
+            }
+            
+            sentInvites = result
+        } catch {
+            self.error = error
+            print("Error fetching sent invites: \(error)")
+        }
+    }
+    
+    func cancelInvite(inviteId: String) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            firebaseService.cancelInvite(inviteId: inviteId) { result in
+                continuation.resume(with: result)
+            }
+        }
+        
+        // Refresh sent invites
+        await fetchSentInvites()
+    }
+    
     // MARK: - Authentication
     
     func signIn(email: String, password: String) async throws -> User {
-        try await withCheckedThrowingContinuation { continuation in
+        let user = try await withCheckedThrowingContinuation { continuation in
             firebaseService.signIn(email: email, password: password) { result in
                 continuation.resume(with: result)
             }
         }
+        
+        // Fetch collaborators and invites after sign in
+        Task {
+            await fetchCollaborators()
+            await fetchPendingInvites()
+            await fetchSentInvites()
+        }
+        
+        return user
     }
     
     func signUp(email: String, password: String, username: String) async throws -> User {
@@ -159,8 +293,11 @@ class RecordStore: ObservableObject {
     
     func signOut() throws {
         try firebaseService.signOut()
-        // Clear records after sign out
+        // Clear data after sign out
         records = []
+        collaborators = []
+        pendingInvites = []
+        sentInvites = []
         saveLocalRecords()
     }
     

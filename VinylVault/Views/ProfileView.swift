@@ -202,6 +202,14 @@ struct ProfileView: View {
                 .padding(.horizontal)
             
             VStack(spacing: 0) {
+                NavigationLink(destination: UsersView()) {
+                    settingsRowContent(title: "Manage Users", icon: "person.2.fill", color: AppColors.primary)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Divider()
+                    .padding(.leading, 50)
+                
                 settingsRow(title: "Notifications", icon: "bell.fill", color: AppColors.accent1)
                 
                 Divider()
@@ -230,25 +238,29 @@ struct ProfileView: View {
         Button(action: {
             // Settings action would go here
         }) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(color)
-                    .frame(width: 30)
-                
-                Text(title)
-                    .font(AppFonts.bodyLarge)
-                    .foregroundColor(AppColors.textPrimary)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14))
-                    .foregroundColor(AppColors.textSecondary)
-            }
-            .padding()
+            settingsRowContent(title: title, icon: icon, color: color)
         }
         .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func settingsRowContent(title: String, icon: String, color: Color) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(color)
+                .frame(width: 30)
+            
+            Text(title)
+                .font(AppFonts.bodyLarge)
+                .foregroundColor(AppColors.textPrimary)
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14))
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .padding()
     }
     
     private var signOutButton: some View {

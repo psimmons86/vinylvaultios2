@@ -9,6 +9,340 @@ class FirebaseService {
     
     private init() {}
     
+    // MARK: - User Management
+    
+    func fetchCollaborators(completion: @escaping (Result<[User], Error>) -> Void) {
+        guard let currentUserId = Auth.auth().currentUser?.uid else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        db.collection("collections").document(currentUserId).collection("collaborators").getDocuments { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let documents = snapshot?.documents else {
+                completion(.success([]))
+                return
+            }
+            
+            let users = documents.compactMap { document -> User? in
+                let data = document.data()
+                return User.fromFirestore(data, id: document.documentID)
+            }
+            
+            completion(.success(users))
+        }
+    }
+    
+    func inviteUser(email: String, role: UserRole, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // First check if the user already exists in Firebase Auth
+        db.collection("users").whereField("email", isEqualTo: email).getDocuments { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            // Create the invitation
+            let invite = CollaborationInvite(
+                inviterId: currentUser.uid,
+                inviterEmail: currentUser.email ?? "",
+                inviterName: currentUser.displayName ?? "Vinyl Collector",
+                inviteeEmail: email,
+                role: role
+            )
+            
+            // Store the invitation in Firestore
+            db.collection("invites").document(invite.id).setData(invite.toFirestore()) { error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                // If the user already exists, add them to the pending collaborators
+                if let existingUserDoc = snapshot?.documents.first {
+                    let inviteeId = existingUserDoc.documentID
+                    
+                    // Add to pending collaborators
+                    db.collection("collections").document(currentUser.uid).collection("pendingCollaborators").document(inviteeId).setData([
+                        "email": email,
+                        "role": role.rawValue,
+                        "inviteId": invite.id,
+                        "createdAt": Timestamp(date: invite.createdAt)
+                    ]) { error in
+                        if let error = error {
+                            completion(.failure(error))
+                            return
+                        }
+                        
+                        completion(.success(()))
+                    }
+                } else {
+                    // User doesn't exist yet, just store the invitation
+                    completion(.success(()))
+                }
+            }
+        }
+    }
+    
+    func acceptInvite(inviteId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // Get the invite
+        db.collection("invites").document(inviteId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let document = snapshot, document.exists,
+                  let data = document.data(),
+                  let invite = CollaborationInvite.fromFirestore(data, id: document.documentID) else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invite not found"])))
+                return
+            }
+            
+            // Verify this invite is for the current user
+            guard invite.inviteeEmail.lowercased() == currentUser.email?.lowercased() else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invite is not for this user"])))
+                return
+            }
+            
+            // Update invite status
+            db.collection("invites").document(inviteId).updateData([
+                "status": CollaborationInvite.InviteStatus.accepted.rawValue
+            ]) { error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                // Add user as collaborator to the inviter's collection
+                db.collection("collections").document(invite.inviterId).collection("collaborators").document(currentUser.uid).setData([
+                    "email": currentUser.email ?? "",
+                    "username": currentUser.displayName ?? "Collaborator",
+                    "role": invite.role.rawValue,
+                    "createdAt": Timestamp(date: Date()),
+                    "updatedAt": Timestamp(date: Date())
+                ]) { error in
+                    if let error = error {
+                        completion(.failure(error))
+                        return
+                    }
+                    
+                    // Remove from pending collaborators if exists
+                    db.collection("collections").document(invite.inviterId).collection("pendingCollaborators").document(currentUser.uid).delete()
+                    
+                    completion(.success(()))
+                }
+            }
+        }
+    }
+    
+    func declineInvite(inviteId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // Get the invite
+        db.collection("invites").document(inviteId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let document = snapshot, document.exists,
+                  let data = document.data(),
+                  let invite = CollaborationInvite.fromFirestore(data, id: document.documentID) else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invite not found"])))
+                return
+            }
+            
+            // Verify this invite is for the current user
+            guard invite.inviteeEmail.lowercased() == currentUser.email?.lowercased() else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invite is not for this user"])))
+                return
+            }
+            
+            // Update invite status
+            db.collection("invites").document(inviteId).updateData([
+                "status": CollaborationInvite.InviteStatus.declined.rawValue
+            ]) { error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                // Remove from pending collaborators if exists
+                db.collection("collections").document(invite.inviterId).collection("pendingCollaborators").document(currentUser.uid).delete()
+                
+                completion(.success(()))
+            }
+        }
+    }
+    
+    func removeCollaborator(userId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // Remove the collaborator
+        db.collection("collections").document(currentUser.uid).collection("collaborators").document(userId).delete { error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            completion(.success(()))
+        }
+    }
+    
+    func updateCollaboratorRole(userId: String, newRole: UserRole, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // Update the collaborator's role
+        db.collection("collections").document(currentUser.uid).collection("collaborators").document(userId).updateData([
+            "role": newRole.rawValue,
+            "updatedAt": Timestamp(date: Date())
+        ]) { error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            completion(.success(()))
+        }
+    }
+    
+    func fetchPendingInvites(completion: @escaping (Result<[CollaborationInvite], Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // Get invites where the current user is the invitee and status is pending
+        db.collection("invites")
+            .whereField("inviteeEmail", isEqualTo: currentUser.email ?? "")
+            .whereField("status", isEqualTo: CollaborationInvite.InviteStatus.pending.rawValue)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    completion(.success([]))
+                    return
+                }
+                
+                let invites = documents.compactMap { document -> CollaborationInvite? in
+                    let data = document.data()
+                    return CollaborationInvite.fromFirestore(data, id: document.documentID)
+                }
+                
+                completion(.success(invites))
+            }
+    }
+    
+    func fetchSentInvites(completion: @escaping (Result<[CollaborationInvite], Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // Get invites where the current user is the inviter
+        db.collection("invites")
+            .whereField("inviterId", isEqualTo: currentUser.uid)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    completion(.success([]))
+                    return
+                }
+                
+                let invites = documents.compactMap { document -> CollaborationInvite? in
+                    let data = document.data()
+                    return CollaborationInvite.fromFirestore(data, id: document.documentID)
+                }
+                
+                completion(.success(invites))
+            }
+    }
+    
+    func cancelInvite(inviteId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let currentUser = Auth.auth().currentUser else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not signed in"])))
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        // Get the invite
+        db.collection("invites").document(inviteId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let document = snapshot, document.exists,
+                  let data = document.data(),
+                  let invite = CollaborationInvite.fromFirestore(data, id: document.documentID) else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invite not found"])))
+                return
+            }
+            
+            // Verify this invite is from the current user
+            guard invite.inviterId == currentUser.uid else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Not authorized to cancel this invite"])))
+                return
+            }
+            
+            // Delete the invite
+            db.collection("invites").document(inviteId).delete { error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                completion(.success(()))
+            }
+        }
+    }
+    
     // MARK: - Configuration
     
     func configure() {
@@ -294,11 +628,4 @@ class FirebaseService {
             }
         }
     }
-}
-
-// Simple User model for authentication
-struct User: Identifiable, Codable {
-    let id: String
-    let email: String
-    let username: String
 }
