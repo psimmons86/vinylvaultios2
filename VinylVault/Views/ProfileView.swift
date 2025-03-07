@@ -1,10 +1,14 @@
 import SwiftUI
 import FirebaseAuth
+import PhotosUI
 
 struct ProfileView: View {
     @EnvironmentObject var recordStore: RecordStore
     @State private var showingSignOutConfirmation = false
     @State private var isLoggedIn = true
+    @State private var profileImage: UIImage?
+    @State private var showingImagePicker = false
+    @State private var photoPickerItem: PhotosPickerItem?
     
     var body: some View {
         NavigationView {
@@ -50,19 +54,47 @@ struct ProfileView: View {
         VStack(spacing: 20) {
             // User Avatar
             ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [AppColors.primary, AppColors.secondary],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                if let profileImage = profileImage {
+                    Image(uiImage: profileImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(AppColors.cardBackground, lineWidth: 3)
                         )
-                    )
-                    .frame(width: 100, height: 100)
+                } else {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [AppColors.primary, AppColors.secondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 100, height: 100)
+                    
+                    Text(userInitials)
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
                 
-                Text(userInitials)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                // Edit button
+                Button(action: {
+                    showingImagePicker = true
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.primary)
+                            .frame(width: 32, height: 32)
+                        
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white)
+                    }
+                }
+                .offset(x: 35, y: 35)
             }
             
             // User Name and Email
@@ -82,6 +114,15 @@ struct ProfileView: View {
         .cornerRadius(AppShapes.cornerRadiusMedium)
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         .padding(.horizontal)
+        .photosPicker(isPresented: $showingImagePicker, selection: $photoPickerItem, matching: .images)
+        .onChange(of: photoPickerItem) { newItem in
+            Task {
+                if let data = try? await newItem?.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data) {
+                    profileImage = uiImage
+                }
+            }
+        }
     }
     
     private var collectionStatsSection: some View {
