@@ -3,11 +3,6 @@ import Firebase
 import SwiftUI
 import FirebaseFirestore
 
-// Import user models
-@_exported import struct VinylVault.User
-@_exported import enum VinylVault.UserRole
-@_exported import struct VinylVault.CollaborationInvite
-
 @MainActor
 class RecordStore: ObservableObject {
     @Published private(set) var records: [Record] = []

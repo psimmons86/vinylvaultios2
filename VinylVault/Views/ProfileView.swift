@@ -2,11 +2,6 @@ import SwiftUI
 import FirebaseAuth
 import PhotosUI
 
-// Import user models
-@_exported import struct VinylVault.User
-@_exported import enum VinylVault.UserRole
-@_exported import struct VinylVault.CollaborationInvite
-
 struct ProfileView: View {
     @EnvironmentObject var recordStore: RecordStore
     @State private var showingSignOutConfirmation = false

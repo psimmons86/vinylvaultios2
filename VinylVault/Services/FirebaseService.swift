@@ -5,11 +5,6 @@ import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI // For Color
 
-// Import user models
-@_exported import struct VinylVault.User
-@_exported import enum VinylVault.UserRole
-@_exported import struct VinylVault.CollaborationInvite
-
 class FirebaseService {
     static let shared = FirebaseService()
     

@@ -1,6 +1,4 @@
 import Foundation
 
-// Define VinylVault namespace
-enum VinylVault {
-    // This is just a namespace, the actual types are defined in UserTypes.swift
-}
+// This file is kept for backward compatibility
+// The actual types are now defined directly in UserTypes.swift
