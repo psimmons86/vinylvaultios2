@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05BF60EE3ED515DF105773DE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6CE4F5925E0AB456386C604 /* ProfileView.swift */; };
 		0F8F812E99BC2FA02E8E9668 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = B3D418B2F1D548CE21CCAB44 /* FirebaseFirestore */; };
 		2361CF2C3527713E5144D18D /* RecordDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C3053CA1668B58B512DA6A /* RecordDetailView.swift */; };
 		2A026E38A9A53B78E1DA445F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B55721A65DE3BAB3693C154A /* LaunchScreen.storyboard */; };
@@ -46,6 +47,7 @@
 		B946AC00AA4EE79426CA6679 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		BD04EB5912F97F0D29DB252E /* RecordRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordRowView.swift; sourceTree = "<group>"; };
 		C4F1E224E36D60C2D3822471 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D6CE4F5925E0AB456386C604 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		DD2091420CCA53DE6A18EBFD /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		F6322186A108F1172904F783 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		FB0349848084757ED18B7C8F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -107,6 +109,7 @@
 			children = (
 				A773D6F31FFAF4C38D32E5CD /* CollectionView.swift */,
 				271A2E7D52CEFB3898807B54 /* LoginView.swift */,
+				D6CE4F5925E0AB456386C604 /* ProfileView.swift */,
 				11C3053CA1668B58B512DA6A /* RecordDetailView.swift */,
 				BD04EB5912F97F0D29DB252E /* RecordRowView.swift */,
 				49265787834977404DCF5800 /* SearchView.swift */,
@@ -219,6 +222,7 @@
 				489979DF5AAADB22FF94C749 /* DiscogsService.swift in Sources */,
 				6B7C3D298F40FB48FE1629B0 /* FirebaseService.swift in Sources */,
 				CBA095CC4A57AC2D686DDD4C /* LoginView.swift in Sources */,
+				05BF60EE3ED515DF105773DE /* ProfileView.swift in Sources */,
 				87989883A8B09D23CF0059AA /* Record.swift in Sources */,
 				2361CF2C3527713E5144D18D /* RecordDetailView.swift in Sources */,
 				8FDA411D9BF41544B7400BEE /* RecordRowView.swift in Sources */,
