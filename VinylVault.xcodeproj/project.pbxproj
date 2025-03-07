@@ -22,6 +22,7 @@
 		AC4F05681C5176FB1537BABC /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B946AC00AA4EE79426CA6679 /* GoogleService-Info.plist */; };
 		B13EDE272D731C6F9DBF3DE5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4F1E224E36D60C2D3822471 /* Assets.xcassets */; };
 		B5E1BCB8C139D417A2BA582A /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = CC6C1AE19CDF5FAA5B458776 /* FirebaseStorage */; };
+		C67AC11CD551B5F9CA04D099 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD644DCEB16BA29057F5F5E8 /* StatsView.swift */; };
 		CBA095CC4A57AC2D686DDD4C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271A2E7D52CEFB3898807B54 /* LoginView.swift */; };
 		D299EEE7B47F88BB93AA5654 /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A773D6F31FFAF4C38D32E5CD /* CollectionView.swift */; };
 		D98701933BC69770377D38F7 /* RecordStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B389C33F22C553F77014B71 /* RecordStore.swift */; };
@@ -48,6 +49,7 @@
 		DD2091420CCA53DE6A18EBFD /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		F6322186A108F1172904F783 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		FB0349848084757ED18B7C8F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		FD644DCEB16BA29057F5F5E8 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 				11C3053CA1668B58B512DA6A /* RecordDetailView.swift */,
 				BD04EB5912F97F0D29DB252E /* RecordRowView.swift */,
 				49265787834977404DCF5800 /* SearchView.swift */,
+				FD644DCEB16BA29057F5F5E8 /* StatsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -226,6 +229,7 @@
 				8FDA411D9BF41544B7400BEE /* RecordRowView.swift in Sources */,
 				D98701933BC69770377D38F7 /* RecordStore.swift in Sources */,
 				E300F24F967032E621A5C55D /* SearchView.swift in Sources */,
+				C67AC11CD551B5F9CA04D099 /* StatsView.swift in Sources */,
 				FDB9F920FF203A20C4DFE644 /* Theme.swift in Sources */,
 				9F97D7D0589FDBCD040C80F9 /* VinylVaultApp.swift in Sources */,
 			);

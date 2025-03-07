@@ -82,7 +82,7 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            Text("Stats View")
+            StatsView()
                 .tabItem {
                     Label("Stats", systemImage: "chart.bar.fill")
                 }
