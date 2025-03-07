@@ -41,19 +41,19 @@ struct RecordCardLarge: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(record.title)
                     .font(AppFonts.titleSmall)
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(AppColors.textLight)
                     .lineLimit(1)
                 
                 Text(record.artist)
                     .font(AppFonts.bodyLarge)
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(AppColors.textLight.opacity(0.8))
                     .lineLimit(1)
                 
                 HStack {
                     if let year = record.year {
                         Text("\(year)")
                             .font(AppFonts.bodySmall)
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(AppColors.textLight.opacity(0.7))
                     }
                     
                     Spacer()
@@ -111,12 +111,12 @@ struct RecordCardMedium: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(record.title)
                     .font(AppFonts.bodyLarge)
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(AppColors.textLight)
                     .lineLimit(1)
                 
                 Text(record.artist)
                     .font(AppFonts.bodyMedium)
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(AppColors.textLight.opacity(0.8))
                     .lineLimit(1)
             }
             .frame(width: 150)
@@ -167,19 +167,19 @@ struct RecordCardRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(record.title)
                     .font(AppFonts.bodyLarge)
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(AppColors.textLight)
                     .lineLimit(1)
                 
                 Text(record.artist)
                     .font(AppFonts.bodyMedium)
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(AppColors.textLight.opacity(0.8))
                     .lineLimit(1)
                 
                 HStack {
                     if let year = record.year {
                         Text("\(year)")
                             .font(AppFonts.bodySmall)
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(AppColors.textLight.opacity(0.7))
                     }
                     
                     Spacer()

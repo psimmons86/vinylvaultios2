@@ -3,9 +3,9 @@ import SwiftUI
 // MARK: - Color Scheme
 struct AppColors {
     // Primary colors
-    static let primary = Color(hex: "FF5A5F")      // Coral red
-    static let secondary = Color(hex: "6C63FF")    // Vibrant purple
-    static let tertiary = Color(hex: "00C9A7")     // Teal
+    static let primary = Color(hex: "00C9A7")      // Teal (now primary)
+    static let secondary = Color(hex: "FF00FF")    // Magenta
+    static let tertiary = Color(hex: "6C63FF")     // Vibrant purple
     
     // Accent colors
     static let accent1 = Color(hex: "FFC75F")      // Warm yellow
@@ -14,12 +14,12 @@ struct AppColors {
     
     // Background colors
     static let background = Color(hex: "F8F9FA")   // Light gray
-    static let cardBackground = Color.white
+    static let cardBackground = Color(hex: "00C9A7") // Teal for cards
     
     // Text colors
-    static let textPrimary = Color(hex: "212529")  // Near black
-    static let textSecondary = Color(hex: "6C757D") // Medium gray
-    static let textLight = Color.white
+    static let textPrimary = Color(hex: "FF00FF")  // Magenta
+    static let textSecondary = Color(hex: "845EC2") // Deep purple
+    static let textLight = Color.white             // White for text on teal
 }
 
 // MARK: - Typography
