@@ -44,6 +44,13 @@ targets:
         ENABLE_BITCODE: NO
         SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
         SWIFT_VERSION: 5.0
+      configs:
+        Debug:
+          DEBUG_INFORMATION_FORMAT: dwarf
+        Release:
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+          COPY_PHASE_STRIP: NO
+          STRIP_INSTALLED_PRODUCT: NO
     info:
       path: VinylVault/Info.plist
       properties:

@@ -58,24 +58,24 @@ EOL
 # Save the SVG to the app icon directory
 cp temp-icon.svg VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon.svg
 
-# Generate PNG files for all required sizes
+# Generate PNG files for all required sizes with solid background (no transparency)
 echo "Generating app-icon-60@2x.png (120x120)..."
-convert -background none -size 120x120 temp-icon.svg VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-60@2x.png
+convert -background "#00C9A7" -size 120x120 temp-icon.svg -flatten VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-60@2x.png
 
 echo "Generating app-icon-60@3x.png (180x180)..."
-convert -background none -size 180x180 temp-icon.svg VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-60@3x.png
+convert -background "#00C9A7" -size 180x180 temp-icon.svg -flatten VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-60@3x.png
 
 echo "Generating app-icon-76.png (76x76)..."
-convert -background none -size 76x76 temp-icon.svg VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-76.png
+convert -background "#00C9A7" -size 76x76 temp-icon.svg -flatten VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-76.png
 
 echo "Generating app-icon-76@2x.png (152x152)..."
-convert -background none -size 152x152 temp-icon.svg VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-76@2x.png
+convert -background "#00C9A7" -size 152x152 temp-icon.svg -flatten VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-76@2x.png
 
 echo "Generating app-icon-83.5@2x.png (167x167)..."
-convert -background none -size 167x167 temp-icon.svg VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-83.5@2x.png
+convert -background "#00C9A7" -size 167x167 temp-icon.svg -flatten VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-83.5@2x.png
 
 echo "Generating app-icon-1024.png (1024x1024)..."
-convert -background none -size 1024x1024 temp-icon.svg VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png
+convert -background "#00C9A7" -size 1024x1024 temp-icon.svg -flatten VinylVault/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png
 
 # Clean up
 rm temp-icon.svg
