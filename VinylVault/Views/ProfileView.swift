@@ -202,7 +202,16 @@ struct ProfileView: View {
                 .padding(.horizontal)
             
             VStack(spacing: 0) {
-                NavigationLink(destination: UsersView()) {
+                // Temporarily commented out until UsersView is properly integrated
+                // NavigationLink(destination: UsersView()) {
+                //     settingsRowContent(title: "Manage Users", icon: "person.2.fill", color: AppColors.primary)
+                // }
+                // .buttonStyle(PlainButtonStyle())
+                
+                // Temporary replacement
+                Button(action: {
+                    // Will be replaced with navigation to UsersView
+                }) {
                     settingsRowContent(title: "Manage Users", icon: "person.2.fill", color: AppColors.primary)
                 }
                 .buttonStyle(PlainButtonStyle())
