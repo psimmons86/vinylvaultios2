@@ -11,8 +11,10 @@ This document tracks the progress of implementing user management functionality 
 
 ### Required Fixes
 1. ✅ Remove @_exported import statements that were causing errors
-2. ✅ Created UserModels.swift with public access modifiers
-3. ❌ Need to properly import UserModels.swift in all files that use these types
+2. ✅ Created UserModels.swift with internal access modifiers
+3. ✅ Removed User.swift to avoid duplicate type definitions
+4. ✅ Removed all import statements trying to import these types
+5. ❌ Need to ensure UserModels.swift is included in the main target
 
 ## Implementation Status
 

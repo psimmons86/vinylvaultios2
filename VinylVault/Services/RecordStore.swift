@@ -1,7 +1,7 @@
 import Foundation
 import Firebase
 import SwiftUI
-import FirebaseFirestore // For Timestamp
+import FirebaseFirestore
 
 @MainActor
 class RecordStore: ObservableObject {
