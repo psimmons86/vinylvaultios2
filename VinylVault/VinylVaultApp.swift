@@ -88,7 +88,7 @@ struct MainTabView: View {
                 }
                 .tag(2)
             
-            ProfileView()
+            SimpleProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
