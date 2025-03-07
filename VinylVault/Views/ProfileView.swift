@@ -2,6 +2,9 @@ import SwiftUI
 import FirebaseAuth
 import PhotosUI
 
+// Import user types
+import Foundation
+
 struct ProfileView: View {
     @EnvironmentObject var recordStore: RecordStore
     @State private var showingSignOutConfirmation = false

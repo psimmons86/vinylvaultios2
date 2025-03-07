@@ -3,6 +3,9 @@ import Firebase
 import SwiftUI
 import FirebaseFirestore
 
+// Import user types
+import Foundation
+
 @MainActor
 class RecordStore: ObservableObject {
     @Published private(set) var records: [Record] = []

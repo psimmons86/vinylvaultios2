@@ -1,6 +1,9 @@
 import SwiftUI
 import Firebase
 
+// Import user types
+import Foundation
+
 struct UsersView: View {
     @EnvironmentObject var recordStore: RecordStore
     @State private var showingInviteSheet = false

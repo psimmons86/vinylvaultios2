@@ -5,6 +5,9 @@ import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI // For Color
 
+// Import user types
+import Foundation
+
 class FirebaseService {
     static let shared = FirebaseService()
     
