@@ -2,6 +2,11 @@ import SwiftUI
 import FirebaseAuth
 import PhotosUI
 
+// Import user models
+@_exported import struct VinylVault.User
+@_exported import enum VinylVault.UserRole
+@_exported import struct VinylVault.CollaborationInvite
+
 struct ProfileView: View {
     @EnvironmentObject var recordStore: RecordStore
     @State private var showingSignOutConfirmation = false
@@ -202,16 +207,7 @@ struct ProfileView: View {
                 .padding(.horizontal)
             
             VStack(spacing: 0) {
-                // Temporarily commented out until UsersView is properly integrated
-                // NavigationLink(destination: UsersView()) {
-                //     settingsRowContent(title: "Manage Users", icon: "person.2.fill", color: AppColors.primary)
-                // }
-                // .buttonStyle(PlainButtonStyle())
-                
-                // Temporary replacement
-                Button(action: {
-                    // Will be replaced with navigation to UsersView
-                }) {
+                NavigationLink(destination: UsersView()) {
                     settingsRowContent(title: "Manage Users", icon: "person.2.fill", color: AppColors.primary)
                 }
                 .buttonStyle(PlainButtonStyle())
