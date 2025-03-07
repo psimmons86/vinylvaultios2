@@ -3,6 +3,7 @@ import Firebase
 import FirebaseStorage
 import FirebaseAuth
 import FirebaseFirestore
+import SwiftUI
 
 class FirebaseService {
     static let shared = FirebaseService()
