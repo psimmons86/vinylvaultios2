@@ -6,15 +6,15 @@ This document tracks the progress of implementing user management functionality 
 ## Current Issues
 
 ### Compilation Errors
-- ✅ FirebaseService.swift: Added SwiftUI import
-- ✅ RecordStore.swift: Added SwiftUI import
-- ✅ UsersView.swift: Already had necessary imports
+- ✅ FirebaseService.swift: Added direct imports for User, UserRole, and CollaborationInvite
+- ✅ RecordStore.swift: Added direct imports for User, UserRole, and CollaborationInvite
+- ✅ UsersView.swift: Added direct imports for User, UserRole, and CollaborationInvite
 
 ### Required Fixes
 1. ✅ Add import statements for the User model in files that use UserRole and CollaborationInvite:
-   - ✅ FirebaseService.swift: Added SwiftUI import
-   - ✅ RecordStore.swift: Added SwiftUI import
-   - ✅ UsersView.swift: Already had necessary imports
+   - ✅ FirebaseService.swift: Added direct imports using @_exported import
+   - ✅ RecordStore.swift: Added direct imports using @_exported import
+   - ✅ UsersView.swift: Added direct imports using @_exported import
 
 ## Implementation Status
 

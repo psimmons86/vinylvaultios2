@@ -1,6 +1,11 @@
 import SwiftUI
 import Firebase
 
+// Import User model
+@_exported import struct VinylVault.User
+@_exported import enum VinylVault.UserRole
+@_exported import struct VinylVault.CollaborationInvite
+
 struct UsersView: View {
     @EnvironmentObject var recordStore: RecordStore
     @State private var showingInviteSheet = false
