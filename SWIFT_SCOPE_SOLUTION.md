@@ -13,7 +13,17 @@ These errors often occur when trying to use types defined in one file from anoth
 
 ## Root Cause
 
-The fundamental issue is that **Swift doesn't support importing types from the same module using import statements**. In a single-module app (which is what most iOS apps are), you can't use import statements to import files from the same module.
+According to the [official Swift documentation on Access Control](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/accesscontrol/), the fundamental issue is that **Swift doesn't support importing types from the same module using import statements**. In a single-module app (which is what most iOS apps are), you can't use import statements to import files from the same module.
+
+The Swift documentation states:
+
+> A module is a single unit of code distribution — a framework or application that's built and shipped as a single unit and that can be imported by another module with Swift's `import` keyword.
+>
+> Each build target (such as an app bundle or framework) in Xcode is treated as a separate module in Swift.
+
+And regarding source files:
+
+> A source file is a single Swift source code file within a module (in effect, a single file within an app or framework). Although it's common to define individual types in separate source files, a single source file can contain definitions for multiple types, functions, and so on.
 
 Common mistakes that lead to these errors:
 
@@ -56,10 +66,17 @@ public struct CollaborationInvite: Identifiable, Codable {
 
 ### Step 2: Use Appropriate Access Modifiers
 
-- `internal` (default): Accessible within the same module
-- `public`: Accessible from other modules that import this module
-- `private`: Accessible only within the defining file
-- `fileprivate`: Accessible only within the defining file
+According to the Swift documentation:
+
+> All entities in your code (with a few specific exceptions) have a default access level of internal if you don't specify an explicit access level yourself. As a result, in many cases you don't need to specify an explicit access level in your code.
+
+The available access levels in Swift are:
+
+- `open`: Least restrictive; entities can be accessed and subclassed by code in the same module and by code in other modules that import the defining module.
+- `public`: Entities can be accessed by code in the same module and by code in other modules that import the defining module, but they can only be subclassed within the defining module.
+- `internal` (default): Entities can be accessed from any source file within their defining module, but not from outside the module.
+- `fileprivate`: Restricts the use of an entity to its own defining source file.
+- `private`: Restricts the use of an entity to the enclosing declaration and extensions of that declaration in the same file.
 
 For a single-module app, `internal` is sufficient for most types. Use `public` if you plan to extract these types into a separate module later.
 
