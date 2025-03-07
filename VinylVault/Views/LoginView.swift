@@ -19,12 +19,11 @@ struct LoginView: View {
             // Background gradient
             LinearGradient(
                 gradient: Gradient(colors: [
-                    AppColors.background,
-                    AppColors.background,
-                    AppColors.primary.opacity(0.1)
+                    AppColors.primary, // Teal
+                    AppColors.secondary // Magenta
                 ]),
-                startPoint: .top,
-                endPoint: .bottom
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
             
@@ -32,17 +31,60 @@ struct LoginView: View {
                 VStack(spacing: 30) {
                     // Logo and Title
                     VStack(spacing: 16) {
-                        Image(systemName: "record.circle")
-                            .font(.system(size: 80))
-                            .foregroundColor(AppColors.primary)
+                        // Custom vinyl record logo
+                        ZStack {
+                            // Outer record
+                            Circle()
+                                .fill(Color.black)
+                                .frame(width: 160, height: 160)
+                                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+                            
+                            // Record grooves
+                            Circle()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                .frame(width: 140, height: 140)
+                            
+                            Circle()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                .frame(width: 120, height: 120)
+                            
+                            Circle()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                .frame(width: 100, height: 100)
+                            
+                            // Record label
+                            Circle()
+                                .fill(AppColors.secondary) // Magenta label
+                                .frame(width: 60, height: 60)
+                            
+                            // Center hole
+                            Circle()
+                                .fill(Color.black)
+                                .frame(width: 10, height: 10)
+                            
+                            // Reflection
+                            Circle()
+                                .fill(
+                                    RadialGradient(
+                                        gradient: Gradient(colors: [
+                                            Color.white.opacity(0.3),
+                                            Color.white.opacity(0)
+                                        ]),
+                                        center: .topLeading,
+                                        startRadius: 0,
+                                        endRadius: 80
+                                    )
+                                )
+                                .frame(width: 160, height: 160)
+                        }
                         
-                        Text("Vinyl Vault")
-                            .font(AppFonts.titleLarge)
-                            .foregroundColor(AppColors.textPrimary)
+                        Text("VINYL VAULT")
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
                         
                         Text(isSignUp ? "Create an account" : "Sign in to your account")
                             .font(AppFonts.bodyLarge)
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(.white)
                     }
                     .padding(.top, 60)
                     .padding(.bottom, 20)
@@ -148,7 +190,7 @@ struct LoginView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFonts.bodyMedium)
-                .foregroundColor(AppColors.textSecondary)
+                .foregroundColor(.white)
             
             HStack {
                 Image(systemName: icon)
@@ -164,12 +206,13 @@ struct LoginView: View {
                     .disableAutocorrection(true)
             }
             .padding()
-            .background(AppColors.cardBackground)
+            .background(Color.white.opacity(0.9))
             .cornerRadius(AppShapes.cornerRadiusMedium)
             .overlay(
                 RoundedRectangle(cornerRadius: AppShapes.cornerRadiusMedium)
-                    .stroke(AppColors.textSecondary.opacity(0.2), lineWidth: 1)
+                    .stroke(AppColors.primary, lineWidth: 2)
             )
+            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
         }
     }
     
@@ -182,7 +225,7 @@ struct LoginView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFonts.bodyMedium)
-                .foregroundColor(AppColors.textSecondary)
+                .foregroundColor(.white)
             
             HStack {
                 Image(systemName: icon)
@@ -197,12 +240,13 @@ struct LoginView: View {
                     .disableAutocorrection(true)
             }
             .padding()
-            .background(AppColors.cardBackground)
+            .background(Color.white.opacity(0.9))
             .cornerRadius(AppShapes.cornerRadiusMedium)
             .overlay(
                 RoundedRectangle(cornerRadius: AppShapes.cornerRadiusMedium)
-                    .stroke(AppColors.textSecondary.opacity(0.2), lineWidth: 1)
+                    .stroke(AppColors.primary, lineWidth: 2)
             )
+            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
         }
     }
     
