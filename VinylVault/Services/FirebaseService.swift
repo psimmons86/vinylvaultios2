@@ -4,6 +4,7 @@ import FirebaseStorage
 import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI // For Color
+import VinylVault.Models.UserModels
 
 class FirebaseService {
     static let shared = FirebaseService()

@@ -1,6 +1,7 @@
 import SwiftUI
 import FirebaseAuth
 import PhotosUI
+import VinylVault.Models.UserModels
 
 struct ProfileView: View {
     @EnvironmentObject var recordStore: RecordStore
