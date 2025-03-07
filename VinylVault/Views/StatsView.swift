@@ -1,5 +1,4 @@
 import SwiftUI
-import Charts
 
 struct StatsView: View {
     @EnvironmentObject var recordStore: RecordStore
@@ -15,19 +14,19 @@ struct StatsView: View {
                         // Summary Cards
                         summaryCardsSection
                         
-                        // Format Distribution Chart
-                        chartSection(title: "Records by Format") {
-                            formatsChart
+                        // Format Distribution
+                        statsSection(title: "Records by Format") {
+                            formatsView
                         }
                         
-                        // Top Artists Chart
-                        chartSection(title: "Top Artists") {
-                            artistsChart
+                        // Top Artists
+                        statsSection(title: "Top Artists") {
+                            topArtistsView
                         }
                         
-                        // Decades Chart
-                        chartSection(title: "Records by Decade") {
-                            decadesChart
+                        // Decades Distribution
+                        statsSection(title: "Records by Decade") {
+                            decadesView
                         }
                         
                         // Top Records Section
@@ -101,7 +100,7 @@ struct StatsView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
     
-    private func chartSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func statsSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(title)
                 .font(AppFonts.titleSmall)
@@ -109,7 +108,6 @@ struct StatsView: View {
                 .padding(.horizontal)
             
             content()
-                .frame(height: 300)
                 .padding()
                 .background(AppColors.cardBackground)
                 .cornerRadius(AppShapes.cornerRadiusMedium)
@@ -118,127 +116,105 @@ struct StatsView: View {
         }
     }
     
-    private var formatsChart: some View {
+    private var formatsView: some View {
         let formatCounts = formatDistribution
+        let total = recordStore.records.count
         
-        return Chart {
-            ForEach(formatCounts, id: \.format) { item in
-                SectorMark(
-                    angle: .value("Count", item.count),
-                    innerRadius: .ratio(0.6),
-                    angularInset: 1.5
-                )
-                .cornerRadius(5)
-                .foregroundStyle(formatColor(for: item.format))
-                .annotation(position: .overlay) {
-                    Text("\(item.count)")
-                        .font(AppFonts.bodySmall.weight(.bold))
-                        .foregroundColor(.white)
+        return VStack(spacing: 16) {
+            // Pie chart visualization using basic SwiftUI
+            HStack(alignment: .center, spacing: 0) {
+                ForEach(formatCounts, id: \.format) { item in
+                    let width = CGFloat(item.count) / CGFloat(total) * 300
+                    Rectangle()
+                        .fill(formatColor(for: item.format))
+                        .frame(width: width, height: 20)
+                        .overlay(
+                            Text(item.count > 5 ? "\(item.count)" : "")
+                                .font(AppFonts.bodySmall.weight(.bold))
+                                .foregroundColor(.white)
+                        )
                 }
             }
-        }
-        .chartBackground { chartProxy in
-            GeometryReader { geometry in
-                let frame = geometry[chartProxy.plotAreaFrame]
-                VStack {
-                    Text("Total")
-                        .font(AppFonts.bodySmall)
-                        .foregroundColor(AppColors.textSecondary)
-                    Text("\(recordStore.records.count)")
-                        .font(AppFonts.titleMedium)
-                        .foregroundColor(AppColors.textPrimary)
+            .cornerRadius(AppShapes.cornerRadiusSmall)
+            
+            // Legend
+            HStack(spacing: 16) {
+                ForEach(formatCounts, id: \.format) { item in
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(formatColor(for: item.format))
+                            .frame(width: 12, height: 12)
+                        
+                        Text("\(item.format.rawValue) (\(item.count))")
+                            .font(AppFonts.bodySmall)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
                 }
-                .position(x: frame.midX, y: frame.midY)
+                Spacer()
             }
         }
     }
     
-    private var artistsChart: some View {
+    private var topArtistsView: some View {
         let artistCounts = topArtists.prefix(5)
+        let maxCount = artistCounts.map { $0.count }.max() ?? 1
         
-        return Chart(artistCounts, id: \.artist) { item in
-            BarMark(
-                x: .value("Count", item.count),
-                y: .value("Artist", item.artist)
-            )
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [AppColors.secondary, AppColors.accent2],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .cornerRadius(6)
-        }
-        .chartYAxis {
-            AxisMarks(preset: .aligned) { value in
-                AxisValueLabel {
-                    if let artist = value.as(String.self) {
-                        Text(artist)
-                            .font(AppFonts.bodySmall)
-                            .foregroundColor(AppColors.textSecondary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-        }
-        .chartXAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel {
-                    if let count = value.as(Int.self) {
-                        Text("\(count)")
-                            .font(AppFonts.bodySmall)
-                            .foregroundColor(AppColors.textSecondary)
-                    }
+        return VStack(spacing: 12) {
+            ForEach(Array(artistCounts.enumerated()), id: \.element.artist) { index, item in
+                HStack {
+                    Text(item.artist)
+                        .font(AppFonts.bodyMedium)
+                        .foregroundColor(AppColors.textPrimary)
+                        .lineLimit(1)
+                        .frame(width: 120, alignment: .leading)
+                    
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [AppColors.secondary, AppColors.accent2],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: CGFloat(item.count) / CGFloat(maxCount) * 150, height: 24)
+                        .cornerRadius(AppShapes.cornerRadiusSmall)
+                    
+                    Text("\(item.count)")
+                        .font(AppFonts.bodyMedium)
+                        .foregroundColor(AppColors.textSecondary)
+                        .frame(width: 30, alignment: .trailing)
                 }
             }
         }
     }
     
-    private var decadesChart: some View {
+    private var decadesView: some View {
         let decadeCounts = decadeDistribution
+        let maxCount = decadeCounts.map { $0.count }.max() ?? 1
         
-        return Chart {
+        return VStack(spacing: 16) {
             ForEach(decadeCounts, id: \.decade) { item in
-                BarMark(
-                    x: .value("Decade", item.decade),
-                    y: .value("Count", item.count)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [AppColors.tertiary, AppColors.accent1],
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
-                )
-                .cornerRadius(6)
-            }
-        }
-        .chartXAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel {
-                    if let decade = value.as(String.self) {
-                        Text(decade)
-                            .font(AppFonts.bodySmall)
-                            .foregroundColor(AppColors.textSecondary)
-                    }
-                }
-            }
-        }
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel {
-                    if let count = value.as(Int.self) {
-                        Text("\(count)")
-                            .font(AppFonts.bodySmall)
-                            .foregroundColor(AppColors.textSecondary)
-                    }
+                HStack {
+                    Text(item.decade)
+                        .font(AppFonts.bodyMedium)
+                        .foregroundColor(AppColors.textPrimary)
+                        .frame(width: 60, alignment: .leading)
+                    
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [AppColors.tertiary, AppColors.accent1],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: CGFloat(item.count) / CGFloat(maxCount) * 150, height: 24)
+                        .cornerRadius(AppShapes.cornerRadiusSmall)
+                    
+                    Text("\(item.count)")
+                        .font(AppFonts.bodyMedium)
+                        .foregroundColor(AppColors.textSecondary)
+                        .frame(width: 30, alignment: .trailing)
                 }
             }
         }
