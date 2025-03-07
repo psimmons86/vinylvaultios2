@@ -5,9 +5,6 @@ import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI // For Color
 
-// Import User types
-import "../Models/UserTypes.swift"
-
 class FirebaseService {
     static let shared = FirebaseService()
     
