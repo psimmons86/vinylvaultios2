@@ -1,27 +1,23 @@
 # App Encryption Documentation
 
-## Question: What type of encryption algorithms does your app implement?
+## What type of encryption algorithms does your app implement?
 
-### Answer: None of the algorithms mentioned above
+**Answer: None of the algorithms mentioned above**
 
-VinylVault does not implement:
-- Proprietary encryption algorithms
-- Standard encryption algorithms instead of, or in addition to, using or accessing the encryption within Apple's operating system
+VinylVault does not implement any custom encryption algorithms. The app relies entirely on:
 
-### Explanation:
-
-VinylVault relies entirely on:
-
-1. **Apple's built-in encryption** for local data storage
-2. **Firebase's security mechanisms** for remote data storage and authentication
-   - Firebase uses HTTPS for data transmission
-   - Firebase handles encryption of data at rest on their servers
-   - Firebase Authentication handles secure credential storage
+1. Apple's built-in encryption mechanisms that are part of iOS
+2. Firebase's security features for data storage and authentication
 
 The app does not:
-- Implement any custom encryption algorithms
-- Use any third-party encryption libraries
-- Encrypt data before sending it to Firebase
-- Implement end-to-end encryption
+- Use proprietary encryption algorithms
+- Implement standard encryption algorithms outside of what's provided by Apple's operating system
+- Contain any custom cryptographic code
 
-All sensitive operations (authentication, data storage, etc.) rely on the security mechanisms provided by Apple's iOS and Google's Firebase platform.
+All data security in the app is handled through:
+- iOS's built-in data protection
+- Firebase Authentication for user authentication
+- Firebase Firestore security rules for data access control
+- HTTPS for secure data transmission
+
+This approach ensures that the app benefits from industry-standard security practices without implementing custom encryption algorithms that might introduce security vulnerabilities.

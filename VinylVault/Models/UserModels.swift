@@ -2,23 +2,23 @@ import Foundation
 import FirebaseFirestore
 
 // User role enum
-enum UserRole: String, Codable, CaseIterable {
+public enum UserRole: String, Codable, CaseIterable {
     case owner = "Owner"
     case editor = "Editor"
     case viewer = "Viewer"
 }
 
 // User model
-struct User: Identifiable, Codable, Equatable {
-    let id: String
-    let email: String
-    var username: String
-    var role: UserRole
-    var profileImageUrl: String?
-    var createdAt: Date
-    var updatedAt: Date
+public struct User: Identifiable, Codable, Equatable {
+    public let id: String
+    public let email: String
+    public var username: String
+    public var role: UserRole
+    public var profileImageUrl: String?
+    public var createdAt: Date
+    public var updatedAt: Date
     
-    init(
+    public init(
         id: String,
         email: String,
         username: String,
@@ -37,7 +37,7 @@ struct User: Identifiable, Codable, Equatable {
     }
     
     // Convert Firestore data to User
-    static func fromFirestore(_ data: [String: Any], id: String) -> User? {
+    public static func fromFirestore(_ data: [String: Any], id: String) -> User? {
         guard let email = data["email"] as? String,
               let username = data["username"] as? String else {
             return nil
@@ -58,7 +58,7 @@ struct User: Identifiable, Codable, Equatable {
     }
     
     // Convert User to Firestore data
-    func toFirestore() -> [String: Any] {
+    public func toFirestore() -> [String: Any] {
         var data: [String: Any] = [
             "email": email,
             "username": username,
@@ -79,43 +79,43 @@ struct User: Identifiable, Codable, Equatable {
     }
     
     // Check if user has permission for an action
-    func canEditRecords() -> Bool {
+    public func canEditRecords() -> Bool {
         return role == .owner || role == .editor
     }
     
-    func canManageUsers() -> Bool {
+    public func canManageUsers() -> Bool {
         return role == .owner
     }
     
-    func canViewRecords() -> Bool {
+    public func canViewRecords() -> Bool {
         return true // All roles can view records
     }
     
-    static func == (lhs: User, rhs: User) -> Bool {
+    public static func == (lhs: User, rhs: User) -> Bool {
         return lhs.id == rhs.id
     }
 }
 
 // Collaboration invite model
-struct CollaborationInvite: Identifiable, Codable {
-    let id: String
-    let inviterId: String
-    let inviterEmail: String
-    let inviterName: String
-    let inviteeEmail: String
-    let role: UserRole
-    let status: InviteStatus
-    let createdAt: Date
-    let expiresAt: Date
+public struct CollaborationInvite: Identifiable, Codable {
+    public let id: String
+    public let inviterId: String
+    public let inviterEmail: String
+    public let inviterName: String
+    public let inviteeEmail: String
+    public let role: UserRole
+    public let status: InviteStatus
+    public let createdAt: Date
+    public let expiresAt: Date
     
-    enum InviteStatus: String, Codable {
+    public enum InviteStatus: String, Codable {
         case pending = "Pending"
         case accepted = "Accepted"
         case declined = "Declined"
         case expired = "Expired"
     }
     
-    init(
+    public init(
         id: String = UUID().uuidString,
         inviterId: String,
         inviterEmail: String,
@@ -138,7 +138,7 @@ struct CollaborationInvite: Identifiable, Codable {
     }
     
     // Convert Firestore data to CollaborationInvite
-    static func fromFirestore(_ data: [String: Any], id: String) -> CollaborationInvite? {
+    public static func fromFirestore(_ data: [String: Any], id: String) -> CollaborationInvite? {
         guard let inviterId = data["inviterId"] as? String,
               let inviterEmail = data["inviterEmail"] as? String,
               let inviterName = data["inviterName"] as? String,
@@ -165,7 +165,7 @@ struct CollaborationInvite: Identifiable, Codable {
     }
     
     // Convert CollaborationInvite to Firestore data
-    func toFirestore() -> [String: Any] {
+    public func toFirestore() -> [String: Any] {
         return [
             "inviterId": inviterId,
             "inviterEmail": inviterEmail,
@@ -178,7 +178,7 @@ struct CollaborationInvite: Identifiable, Codable {
         ]
     }
     
-    var isExpired: Bool {
+    public var isExpired: Bool {
         return Date() > expiresAt
     }
 }
