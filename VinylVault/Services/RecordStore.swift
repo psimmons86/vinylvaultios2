@@ -2,7 +2,6 @@ import Foundation
 import Firebase
 import SwiftUI
 import FirebaseFirestore
-import VinylVault.Models.UserModels
 
 @MainActor
 class RecordStore: ObservableObject {

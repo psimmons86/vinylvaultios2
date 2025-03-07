@@ -1,6 +1,5 @@
 import SwiftUI
 import Firebase
-import VinylVault.Models.UserModels
 
 struct UsersView: View {
     @EnvironmentObject var recordStore: RecordStore
